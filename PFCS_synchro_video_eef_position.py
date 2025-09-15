@@ -18,8 +18,6 @@ from moviepy import VideoFileClip
 # )
 # hv.extension('bokeh')
 
-# DATA_PATH = "/home/kir0ul/Projects/table-task-ur5e/rosbag2_2025-09-08_16-33-22_2025-09-08-16-33-23.bag"
-
 VIDEO_PATH = "/home/kir0ul/Projects/TableTaskVideos/2.webm"
 FILENUM = 1
 SKILL_CHOICE = ["", "Reaching", "Placing"]
