@@ -12,6 +12,7 @@ from PIL import Image
 from moviepy import VideoFileClip
 from rosbags.typesys import Stores, get_typestore
 from rosbags.highlevel import AnyReader
+import cv2
 
 # PRIMARY_COLOR = "#0072B5"
 # SECONDARY_COLOR = "#B54300"
@@ -71,7 +72,8 @@ def get_video_frame(index, video_path):
             index=index,
             plugin="pyav",
         )
-        return frame
+        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return img
     except StopIteration:
         print("Reached the end of the video file")
         return np.asarray(Image.new("RGB", (3840, 2160), (0, 0, 0)))
@@ -115,7 +117,7 @@ def extract_eef_data_from_rosbag(bagfile):
     tf_df = pd.DataFrame(tf)
     gripper_df = pd.DataFrame(gripper)
     gripper_df["val"] = gripper_df["val"].apply(lambda elem: elem / 100)
-    print("Done extracting TF & gripper data from Bag file ✓")
+    print("Extracting TF & gripper data from Bag file: done ✓")
     return tf_df, gripper_df
 
 
@@ -129,10 +131,10 @@ def get_line_plot(tf_df, gripper_df, frame_idx, skill_choice=None):
     vline = hv.VLine(frame_idx).opts(color="black", line_dash="dashed", line_width=3)
     # print(f"\nTimestamp slider: {df.timestamps[frame_idx]}\n")
     # lineplot_tf = df.hvplot(x="timestamps", y=["x", "y", "z"], height=400)
-    lineplot_tf = tf_df.hvplot(x="index", y=["x", "y", "z"], height=400).opts(
-        xlabel="Index", ylabel="Position"
+    lineplot_tf = tf_df.hvplot(x="timestamp", y=["x", "y", "z"], height=400).opts(
+        xlabel="Time", ylabel="Position"
     )
-    lineplot_grip = gripper_df["val"].hvplot(label="gripper")
+    lineplot_grip = gripper_df.hvplot(x="timestamp", y=["val"], label="gripper")
     # overlay.opts(opts.VLine(color="red", line_dash='dashed', line_width=6))
     overlay = lineplot_tf * lineplot_grip * vline
     fill_min = np.min([tf_df.x.min(), tf_df.y.min(), tf_df.z.min()])
