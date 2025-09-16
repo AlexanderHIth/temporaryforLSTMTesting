@@ -79,50 +79,69 @@ def get_video_frame(index, video_path):
 
 
 @pn.cache
-def extract_eef_tf_data_from_rosbag(bagfile):
+def extract_eef_data_from_rosbag(bagfile):
+    print("Extracting TF & gripper data from Bag file...")
     tf = {"x": [], "y": [], "z": [], "timestamp": []}
+    gripper = {"val": [], "timestamp": []}
 
     # Create a type store to use if the bag has no message definitions.
     typestore = get_typestore(Stores.ROS1_NOETIC)
 
     # Create reader instance and open for reading.
     with AnyReader([bagfile], default_typestore=typestore) as reader:
-        connections = [x for x in reader.connections if x.topic == '/imu_raw/Imu']
+        connections = [x for x in reader.connections if x.topic == "/imu_raw/Imu"]
         for connection, timestamp, rawdata in reader.messages(connections=connections):
             msg = reader.deserialize(rawdata, connection.msgtype)
             # print(msg.header.frame_id
             if connection.msgtype == "tf2_msgs/msg/TFMessage":
-                if msg.transforms[0].child_frame_id == "tool0_controller" and msg.transforms[0].header.frame_id == "base":
+                if (
+                    msg.transforms[0].child_frame_id == "tool0_controller"
+                    and msg.transforms[0].header.frame_id == "base"
+                ):
                     tf["x"].append(msg.transforms[0].transform.translation.x)
                     tf["y"].append(msg.transforms[0].transform.translation.y)
                     tf["z"].append(msg.transforms[0].transform.translation.z)
                     # tf["timestamp"].append(pd.to_datetime(timestamp, utc=True).tz_localize("UTC").tz_convert("EST"))
-                    tf["timestamp"].append(pd.to_datetime(timestamp, utc=True).tz_convert("EST"))
+                    tf["timestamp"].append(
+                        pd.to_datetime(timestamp, utc=True).tz_convert("EST")
+                    )
+
+            if connection.msgtype == "ur5e_move/msg/gripper_pos":
+                gripper["val"].append(msg.gripper_pos)
+                gripper["timestamp"].append(
+                    pd.to_datetime(timestamp, utc=True).tz_convert("EST")
+                )
 
     tf_df = pd.DataFrame(tf)
-    return tf_df
+    gripper_df = pd.DataFrame(gripper)
+    gripper_df["val"] = gripper_df["val"].apply(lambda elem: elem / 100)
+    print("Done extracting TF & gripper data from Bag file ✓")
+    return tf_df, gripper_df
 
-data_df = extract_eef_tf_data_from_rosbag(BAG_FILE)
 
-def get_line_plot(df, frame_idx, skill_choice=None):
+tf_df, gripper_df = extract_eef_data_from_rosbag(BAG_FILE)
+
+
+def get_line_plot(tf_df, gripper_df, frame_idx, skill_choice=None):
     # vline = hv.VLine(df.timestamps[frame_idx]).opts(
     #     color="black", line_dash="dashed", line_width=6
     # )
     vline = hv.VLine(frame_idx).opts(color="black", line_dash="dashed", line_width=3)
     # print(f"\nTimestamp slider: {df.timestamps[frame_idx]}\n")
-    # lineplot = df.hvplot(x="timestamps", y=["x", "y", "z"], height=400)
-    lineplot = df.hvplot(x="index", y=["x", "y", "z"], height=400).opts(
+    # lineplot_tf = df.hvplot(x="timestamps", y=["x", "y", "z"], height=400)
+    lineplot_tf = tf_df.hvplot(x="index", y=["x", "y", "z"], height=400).opts(
         xlabel="Index", ylabel="Position"
     )
+    lineplot_grip = gripper_df["val"].hvplot(label="gripper")
     # overlay.opts(opts.VLine(color="red", line_dash='dashed', line_width=6))
-    overlay = lineplot * vline
-    fill_min = np.min([df.x.min(), df.y.min(), df.z.min()])
-    fill_max = np.max([df.x.max(), df.y.max(), df.z.max()])
+    overlay = lineplot_tf * lineplot_grip * vline
+    fill_min = np.min([tf_df.x.min(), tf_df.y.min(), tf_df.z.min()])
+    fill_max = np.max([tf_df.x.max(), tf_df.y.max(), tf_df.z.max()])
 
     if skill_choice != "":
         skill_data = get_skill_data(filenum=FILENUM, skill=skill_choice)
         for sect_i, sect_val in enumerate(skill_data):
-            xs = df.index[sect_val["ini"] : sect_val["end"]]
+            xs = tf_df.index[sect_val["ini"] : sect_val["end"]]
             spread = hv.Spread(
                 (
                     xs,
@@ -137,7 +156,7 @@ def get_line_plot(df, frame_idx, skill_choice=None):
     # else:
     #     for sect_i, sect_key in enumerate(file_ground_truth["idx"].keys()):
     #         sect_dict_current = file_ground_truth["idx"][sect_key]
-    #         xs = df.index[sect_dict_current["ini"] : sect_dict_current["end"]]
+    #         xs = tf_df.index[sect_dict_current["ini"] : sect_dict_current["end"]]
     #         spread = hv.Spread(
     #             (
     #                 xs,
@@ -156,7 +175,7 @@ skill_choice_widget = pn.widgets.Select(name="Skill", value="", options=SKILL_CH
 clip = VideoFileClip(VIDEO_PATH)
 frame_count = clip.reader.n_frames - 1
 slider_widget = pn.widgets.IntSlider(
-    name="Index", value=int(len(data_df) / 2), start=0, end=len(data_df)
+    name="Index", value=int(len(tf_df) / 2), start=0, end=len(tf_df)
 )
 
 
@@ -171,13 +190,17 @@ def get_frame_plot(frame_idx, frame_count, plot_pts_num):
 
 
 line_plt = pn.bind(
-    get_line_plot, df=data_df, frame_idx=slider_widget, skill_choice=skill_choice_widget
+    get_line_plot,
+    tf_df=tf_df,
+    gripper_df=gripper_df,
+    frame_idx=slider_widget,
+    skill_choice=skill_choice_widget,
 )
 img_plt = pn.bind(
     get_frame_plot,
     frame_idx=slider_widget,
     frame_count=frame_count,
-    plot_pts_num=len(data_df),
+    plot_pts_num=len(tf_df),
 )
 
 centered_img = pn.Row(pn.layout.HSpacer(), img_plt, pn.layout.HSpacer())
