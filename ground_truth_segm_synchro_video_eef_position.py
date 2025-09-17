@@ -14,6 +14,7 @@ from rosbags.typesys import Stores, get_typestore
 from rosbags.highlevel import AnyReader
 import cv2
 import warnings
+import datetime as dt
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -123,13 +124,9 @@ def extract_eef_data_from_rosbag(bagfile):
 tf_df, gripper_df = extract_eef_data_from_rosbag(BAG_FILE)
 
 
-def get_line_plot(tf_df, gripper_df, frame_idx, skill_choice=None):
-    # vline = hv.VLine(df.timestamps[frame_idx]).opts(
-    #     color="black", line_dash="dashed", line_width=6
-    # )
-    vline = hv.VLine(frame_idx).opts(color="black", line_dash="dashed", line_width=3)
-    # print(f"\nTimestamp slider: {df.timestamps[frame_idx]}\n")
-    # lineplot_tf = df.hvplot(x="timestamps", y=["x", "y", "z"], height=400)
+def get_line_plot(tf_df, gripper_df, epoch_req, skill_choice=None):
+    slider_ts = dt.datetime.fromtimestamp(epoch_req) - dt.timedelta(hours=1)
+    vline = hv.VLine(slider_ts).opts(color="black", line_dash="dashed", line_width=3)
     lineplot_tf = tf_df.hvplot(x="timestamp", y=["x", "y", "z"], height=400).opts(
         xlabel="Time", ylabel="Position"
     )
@@ -199,7 +196,7 @@ line_plt = pn.bind(
     get_line_plot,
     tf_df=tf_df,
     gripper_df=gripper_df,
-    frame_idx=slider_widget,
+    epoch_req=slider_widget,
     skill_choice=skill_choice_widget,
 )
 img_plt = pn.bind(
