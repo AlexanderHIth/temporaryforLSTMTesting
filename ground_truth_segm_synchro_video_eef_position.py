@@ -13,6 +13,9 @@ from moviepy import VideoFileClip
 from rosbags.typesys import Stores, get_typestore
 from rosbags.highlevel import AnyReader
 import cv2
+import warnings
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 # PRIMARY_COLOR = "#0072B5"
 # SECONDARY_COLOR = "#B54300"
@@ -21,7 +24,6 @@ import cv2
 # )
 # hv.extension('bokeh')
 
-# VIDEO_PATH = "/home/kir0ul/Projects/TableTaskVideos/2.webm"
 DATA_PATH_ROOT = Path("/home/kir0ul/Projects/table-task-ur5e/")
 VIDEO_PATH = DATA_PATH_ROOT / "rosbag2_2025-09-08_19-46-18_2025-09-08-19-46-19.mkv"
 BAG_FILE = DATA_PATH_ROOT / "rosbag2_2025-09-08_19-46-18_2025-09-08-19-46-19.bag"
@@ -61,9 +63,6 @@ def get_skill_data(filenum, skill):
     return skill_data[filenum][skill]
 
 
-# video = pn.pane.Video(
-#     "/home/kir0ul/Projects/TableTaskVideos/2.webm", width=720, loop=False
-# )
 def get_video_frame(index, video_path):
     # read a single frame
     try:
@@ -175,14 +174,19 @@ def get_line_plot(tf_df, gripper_df, frame_idx, skill_choice=None):
 
 skill_choice_widget = pn.widgets.Select(name="Skill", value="", options=SKILL_CHOICE)
 clip = VideoFileClip(VIDEO_PATH)
-frame_count = clip.reader.n_frames - 1
+frames_count = clip.reader.n_frames - 1
+epoch_ini = int(tf_df.timestamp.iloc[0].timestamp()) + 1
+epoch_end = int(tf_df.timestamp.iloc[-1].timestamp())
 slider_widget = pn.widgets.IntSlider(
-    name="Index", value=int(len(tf_df) / 2), start=0, end=len(tf_df)
+    name="Epoch",
+    value=int((epoch_end - epoch_ini) / 2 + epoch_ini),
+    start=epoch_ini,
+    end=epoch_end - 1,
 )
 
 
-def get_frame_plot(frame_idx, frame_count, plot_pts_num):
-    idx = int(frame_count * frame_idx / plot_pts_num)
+def get_frame_plot(epoch_req, epoch_ini):
+    idx = epoch_req - epoch_ini
     img = get_video_frame(
         index=idx,
         video_path=VIDEO_PATH,
@@ -200,9 +204,8 @@ line_plt = pn.bind(
 )
 img_plt = pn.bind(
     get_frame_plot,
-    frame_idx=slider_widget,
-    frame_count=frame_count,
-    plot_pts_num=len(tf_df),
+    epoch_req=slider_widget,
+    epoch_ini=epoch_ini,
 )
 
 centered_img = pn.Row(pn.layout.HSpacer(), img_plt, pn.layout.HSpacer())
