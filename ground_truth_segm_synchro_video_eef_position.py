@@ -26,7 +26,6 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # hv.extension('bokeh')
 
 DATA_PATH_ROOT = Path("/home/kir0ul/Projects/table-task-ur5e/")
-VIDEO_PATH = DATA_PATH_ROOT / "rosbag2_2025-09-08_19-46-18_2025-09-08-19-46-19.mkv"
 BAG_FILE = DATA_PATH_ROOT / "rosbag2_2025-09-08_19-46-18_2025-09-08-19-46-19.bag"
 SKILL_CHOICE = ["", "Reaching", "Placing"]
 
@@ -62,6 +61,88 @@ def get_skill_data(filenum, skill):
         },
     ]
     return skill_data[filenum][skill]
+
+
+def get_img_height_width(bagfile):
+    # Create a type store to use if the bag has no message definitions.
+    typestore = get_typestore(Stores.ROS1_NOETIC)
+
+    # Create reader instance and open for reading.
+    with AnyReader([bagfile], default_typestore=typestore) as reader:
+        connections = [x for x in reader.connections if x.topic == "/imu_raw/Imu"]
+        for connection, timestamp, rawdata in reader.messages(connections=connections):
+            msg = reader.deserialize(rawdata, connection.msgtype)
+            # print(msg.header.frame_id
+            if connection.msgtype == "sensor_msgs/msg/Image":
+                # print(msg)
+                break
+    return msg.height, msg.width, msg.data
+
+
+def extract_video_from_bag(bagfile, fps=20):
+    print("Extracting video from Bag file...")
+
+    extension = "mkv"
+    video_path = bagfile.parent / (bagfile.stem + "." + extension)
+
+    # Initialize video writer
+    img_height, img_width, _ = get_img_height_width(bagfile=bagfile)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Use 'mp4v' for MP4 format
+    video = cv2.VideoWriter(
+        filename=video_path, fourcc=fourcc, fps=fps, frameSize=(img_width, img_height)
+    )
+
+    # Create a type store to use if the bag has no message definitions.
+    typestore = get_typestore(Stores.ROS1_NOETIC)
+
+    # Create reader instance and open for reading.
+    with AnyReader([bagfile], default_typestore=typestore) as reader:
+        connections = [x for x in reader.connections if x.topic == "/imu_raw/Imu"]
+        for connection, timestamp, rawdata in reader.messages(connections=connections):
+            msg = reader.deserialize(rawdata, connection.msgtype)
+            # print(msg.header.frame_id
+            if connection.msgtype == "sensor_msgs/msg/Image":
+                frame = msg.data.reshape((msg.height, msg.width, 3))
+
+                current_ts = pd.to_datetime(timestamp, utc=True).tz_convert("EST")
+
+                img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+                # Add timestamp overlay on image
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                txt1 = current_ts.isoformat()
+                txt2 = str(current_ts.timestamp())
+                fontScale = 0.5
+                white = (255, 255, 255)
+                fontthickness = 1
+                cv2.putText(
+                    img=img,
+                    text=txt1,
+                    org=(10, 30),
+                    fontFace=font,
+                    fontScale=fontScale,
+                    color=white,
+                    thickness=fontthickness,
+                )
+                cv2.putText(
+                    img=img,
+                    text=txt2,
+                    org=(10, 50),
+                    fontFace=font,
+                    fontScale=fontScale,
+                    color=white,
+                    thickness=fontthickness,
+                )
+
+                # Add images to the video
+                video.write(img)
+
+    # Release the video writer
+    video.release()
+    cv2.destroyAllWindows()
+    print("Extracting video from Bag file: done ✓")
+    print(f"Video path: {video_path}")
+    return video_path
 
 
 def get_video_frame(index, video_path):
@@ -170,7 +251,8 @@ def get_line_plot(tf_df, gripper_df, epoch_req, skill_choice=None):
 
 
 skill_choice_widget = pn.widgets.Select(name="Skill", value="", options=SKILL_CHOICE)
-clip = VideoFileClip(VIDEO_PATH)
+video_path = extract_video_from_bag(bagfile=BAG_FILE, fps=20)
+clip = VideoFileClip(video_path)
 frames_count = clip.reader.n_frames - 1
 epoch_ini = int(tf_df.timestamp.iloc[0].timestamp()) + 1
 epoch_end = int(tf_df.timestamp.iloc[-1].timestamp())
@@ -186,7 +268,7 @@ def get_frame_plot(epoch_req, epoch_ini):
     idx = epoch_req - epoch_ini
     img = get_video_frame(
         index=idx,
-        video_path=VIDEO_PATH,
+        video_path=video_path,
     )
     frame_plot = pn.pane.Image(Image.fromarray(img), width=480, align="center")
     return frame_plot
