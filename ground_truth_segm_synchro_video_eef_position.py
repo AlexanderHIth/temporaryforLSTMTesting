@@ -15,6 +15,7 @@ from rosbags.highlevel import AnyReader
 import cv2
 import warnings
 import datetime as dt
+import json
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -27,40 +28,29 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 DATA_PATH_ROOT = Path("/home/kir0ul/Projects/table-task-ur5e/")
 BAG_FILE = DATA_PATH_ROOT / "rosbag2_2025-09-08_19-46-18_2025-09-08-19-46-19.bag"
-SKILL_CHOICE = ["", "Reaching", "Placing"]
+GROUND_TRUTH_SEGM_FILE = DATA_PATH_ROOT / "table_task_UR5e_ground_truth.json"
 
 pn.extension(design="material", sizing_mode="stretch_width")
 
 
-@pn.cache
-def get_skill_data(filenum, skill):
-    skill_data = [
-        {
-            SKILL_CHOICE[1]: [
-                {"ini": 133, "end": 1242},
-            ],
-            SKILL_CHOICE[2]: [
-                {"ini": 1403, "end": 1602},
-            ],
-        },
-        {
-            SKILL_CHOICE[1]: [
-                {"ini": 133, "end": 1242},
-                {"ini": 1694, "end": 3239},
-                {"ini": 3802, "end": 5138},
-                {"ini": 5737, "end": 6158},
-                {"ini": 7067, "end": 7478},
-            ],
-            SKILL_CHOICE[2]: [
-                {"ini": 1403, "end": 1602},
-                {"ini": 3383, "end": 3680},
-                {"ini": 5246, "end": 5595},
-                {"ini": 6517, "end": 6899},
-                {"ini": 7573, "end": 7850},
-            ],
-        },
-    ]
-    return skill_data[filenum][skill]
+def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
+    if not GROUND_TRUTH_SEGM_FILE.exists():
+        print(
+            "JSON ground truth segmentation file not found:\n"
+            f"`{GROUND_TRUTH_SEGM_FILE}`"
+        )
+        return
+    with open(GROUND_TRUTH_SEGM_FILE) as fid:
+        json_str = fid.read()
+    gt_segm_all = json.loads(json_str)
+    gt_segm_dict = None
+    for item in gt_segm_all:
+        if item.get("filename") == bagfile.name:
+            gt_segm_dict = item
+            break
+    if gt_segm_dict is None:
+        print(f"Segmentation data not found in `{GROUND_TRUTH_SEGM_FILE}`")
+    return gt_segm_dict
 
 
 def get_img_height_width(bagfile):
@@ -205,7 +195,7 @@ def extract_eef_data_from_rosbag(bagfile):
 tf_df, gripper_df = extract_eef_data_from_rosbag(BAG_FILE)
 
 
-def get_line_plot(tf_df, gripper_df, epoch_req, skill_choice=None):
+def get_line_plot(tf_df, gripper_df, epoch_req, gt_segm_dict=None, skill_choice=None):
     slider_ts = dt.datetime.fromtimestamp(epoch_req) - dt.timedelta(hours=1)
     vline = hv.VLine(slider_ts).opts(color="black", line_dash="dashed", line_width=3)
     lineplot_tf = tf_df.hvplot(x="timestamp", y=["x", "y", "z"], height=400).opts(
@@ -217,10 +207,27 @@ def get_line_plot(tf_df, gripper_df, epoch_req, skill_choice=None):
     fill_min = np.min([tf_df.x.min(), tf_df.y.min(), tf_df.z.min()])
     fill_max = np.max([tf_df.x.max(), tf_df.y.max(), tf_df.z.max()])
 
-    if skill_choice != "":
-        skill_data = get_skill_data(filenum=FILENUM, skill=skill_choice)
-        for sect_i, sect_val in enumerate(skill_data):
-            xs = tf_df.index[sect_val["ini"] : sect_val["end"]]
+    if skill_choice == "HigherLevel":
+        for sect_key in gt_segm_dict[skill_choice]:
+            sect_val = gt_segm_dict[skill_choice][sect_key]
+            xs = tf_df.timestamp[
+                (
+                    tf_df.timestamp
+                    > pd.Timestamp(
+                        dt.datetime.fromtimestamp(sect_val["ini"])
+                        - dt.timedelta(hours=1),
+                        tz="EST",
+                    )
+                )
+                & (
+                    tf_df.timestamp
+                    < pd.Timestamp(
+                        dt.datetime.fromtimestamp(sect_val["end"])
+                        - dt.timedelta(hours=1),
+                        tz="EST",
+                    )
+                )
+            ] - dt.timedelta(hours=5)
             spread = hv.Spread(
                 (
                     xs,
@@ -228,11 +235,11 @@ def get_line_plot(tf_df, gripper_df, epoch_req, skill_choice=None):
                     fill_min - 2,
                     fill_max + 2,
                 ),
-                # label=sect_key,
-            ).opts(fill_alpha=0.15, color="gray")
+                label=sect_key,
+            ).opts(fill_alpha=0.15)
             overlay = overlay * spread
 
-    # else:
+    # elif skill_choice == "LowerLevel":
     #     for sect_i, sect_key in enumerate(file_ground_truth["idx"].keys()):
     #         sect_dict_current = file_ground_truth["idx"][sect_key]
     #         xs = tf_df.index[sect_dict_current["ini"] : sect_dict_current["end"]]
@@ -245,12 +252,21 @@ def get_line_plot(tf_df, gripper_df, epoch_req, skill_choice=None):
     #             ),
     #             label=sect_key,
     #             # vdims=["y", "yerrneg", "yerrpos"],
-    #         ).opts(fill_alpha=0.15)
+    #         ).opts(fill_alpha=0.15, color="gray")
     #         overlay = overlay * spread
+
     return overlay.opts(ylim=(fill_min - 0.1, fill_max + 0.1))
 
 
-skill_choice_widget = pn.widgets.Select(name="Skill", value="", options=SKILL_CHOICE)
+gt_segm_dict = get_ground_truth_segmentation(
+    ground_truth_segm_file=GROUND_TRUTH_SEGM_FILE, bagfile=BAG_FILE
+)
+gt_file_keys = set(gt_segm_dict.keys())
+gt_file_keys.remove("filename")
+gt_file_keys.add("")
+skill_choice_widget = pn.widgets.Select(
+    name="Skill", value="", options=list(gt_file_keys)
+)
 video_path = extract_video_from_bag(bagfile=BAG_FILE, fps=20)
 clip = VideoFileClip(video_path)
 frames_count = clip.reader.n_frames - 1
@@ -280,6 +296,7 @@ line_plt = pn.bind(
     gripper_df=gripper_df,
     epoch_req=slider_widget,
     skill_choice=skill_choice_widget,
+    gt_segm_dict=gt_segm_dict,
 )
 img_plt = pn.bind(
     get_frame_plot,
