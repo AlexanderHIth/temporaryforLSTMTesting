@@ -239,21 +239,39 @@ def get_line_plot(tf_df, gripper_df, epoch_req, gt_segm_dict=None, skill_choice=
             ).opts(fill_alpha=0.15)
             overlay = overlay * spread
 
-    # elif skill_choice == "LowerLevel":
-    #     for sect_i, sect_key in enumerate(file_ground_truth["idx"].keys()):
-    #         sect_dict_current = file_ground_truth["idx"][sect_key]
-    #         xs = tf_df.index[sect_dict_current["ini"] : sect_dict_current["end"]]
-    #         spread = hv.Spread(
-    #             (
-    #                 xs,
-    #                 fill_max - fill_min,
-    #                 fill_min - 2,
-    #                 fill_max + 2,
-    #             ),
-    #             label=sect_key,
-    #             # vdims=["y", "yerrneg", "yerrpos"],
-    #         ).opts(fill_alpha=0.15, color="gray")
-    #         overlay = overlay * spread
+    elif skill_choice == "LowerLevel":
+        palette = hv.Palette.default_cycles["Set1"]
+        for idx, sect_key in enumerate(gt_segm_dict[skill_choice]):
+            sect_val = gt_segm_dict[skill_choice][sect_key]
+            for sect_cur in sect_val:
+                xs = tf_df.timestamp[
+                    (
+                        tf_df.timestamp
+                        > pd.Timestamp(
+                            dt.datetime.fromtimestamp(sect_cur["ini"])
+                            - dt.timedelta(hours=1),
+                            tz="EST",
+                        )
+                    )
+                    & (
+                        tf_df.timestamp
+                        < pd.Timestamp(
+                            dt.datetime.fromtimestamp(sect_cur["end"])
+                            - dt.timedelta(hours=1),
+                            tz="EST",
+                        )
+                    )
+                ] - dt.timedelta(hours=5)
+                spread = hv.Spread(
+                    (
+                        xs,
+                        fill_max - fill_min,
+                        fill_min - 2,
+                        fill_max + 2,
+                    ),
+                    label=sect_key,
+                ).opts(fill_alpha=0.15, color=palette[idx])
+                overlay = overlay * spread
 
     return overlay.opts(ylim=(fill_min - 0.1, fill_max + 0.1))
 
