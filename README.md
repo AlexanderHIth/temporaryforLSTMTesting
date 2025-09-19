@@ -8,7 +8,7 @@
 To have a look at the recorded demonstration data, run the following script: `panel serve PFCS_synchro_video_eef_position.py`, and open the URL (e.g. http://localhost:5006/ground_truth_segm_synchro_video_eef_position) in your browser.
 It should look like the screenshot below.
 
-![](assets/ground-truth-segmentation-app.png)
+<img src="assets/ground-truth-segmentation-app.png" alt="web app screenshot" width="600"/>
 
 ## Ground truth segmentation
 To get the ground truth segmentation data, move the slider and save the Unix epoch number between each segment in the JSON file.
