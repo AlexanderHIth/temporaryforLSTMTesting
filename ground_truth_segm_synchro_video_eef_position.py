@@ -16,6 +16,7 @@ import cv2
 import warnings
 import datetime as dt
 import json
+from tqdm.auto import tqdm
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -88,7 +89,10 @@ def extract_video_from_bag(bagfile, fps=20):
     # Create reader instance and open for reading.
     with AnyReader([bagfile], default_typestore=typestore) as reader:
         connections = [x for x in reader.connections if x.topic == "/imu_raw/Imu"]
-        for connection, timestamp, rawdata in reader.messages(connections=connections):
+        msg_nb_total = len(list(reader.messages(connections=connections)))
+        for connection, timestamp, rawdata in tqdm(
+            reader.messages(connections=connections), total=msg_nb_total
+        ):
             msg = reader.deserialize(rawdata, connection.msgtype)
             # print(msg.header.frame_id
             if connection.msgtype == "sensor_msgs/msg/Image":
@@ -163,7 +167,10 @@ def extract_eef_data_from_rosbag(bagfile):
     # Create reader instance and open for reading.
     with AnyReader([bagfile], default_typestore=typestore) as reader:
         connections = [x for x in reader.connections if x.topic == "/imu_raw/Imu"]
-        for connection, timestamp, rawdata in reader.messages(connections=connections):
+        msg_nb_total = len(list(reader.messages(connections=connections)))
+        for connection, timestamp, rawdata in tqdm(
+            reader.messages(connections=connections), total=msg_nb_total
+        ):
             msg = reader.deserialize(rawdata, connection.msgtype)
             # print(msg.header.frame_id
             if connection.msgtype == "tf2_msgs/msg/TFMessage":
