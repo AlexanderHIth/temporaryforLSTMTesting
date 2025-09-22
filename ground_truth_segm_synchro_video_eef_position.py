@@ -35,13 +35,13 @@ pn.extension(design="material", sizing_mode="stretch_width")
 
 
 def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
-    if not GROUND_TRUTH_SEGM_FILE.exists():
+    if not ground_truth_segm_file.exists():
         print(
             "JSON ground truth segmentation file not found:\n"
-            f"`{GROUND_TRUTH_SEGM_FILE}`"
+            f"`{ground_truth_segm_file}`"
         )
         return
-    with open(GROUND_TRUTH_SEGM_FILE) as fid:
+    with open(ground_truth_segm_file) as fid:
         json_str = fid.read()
     gt_segm_all = json.loads(json_str)
     gt_segm_dict = None
@@ -50,7 +50,7 @@ def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
             gt_segm_dict = item
             break
     if gt_segm_dict is None:
-        print(f"Segmentation data not found in `{GROUND_TRUTH_SEGM_FILE}`")
+        print(f"Segmentation data not found in `{ground_truth_segm_file}`")
     return gt_segm_dict
 
 
