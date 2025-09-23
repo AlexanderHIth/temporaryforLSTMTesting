@@ -46,8 +46,13 @@ def extract_eef_data_from_rosbag(bagfile):
     tf_df = pd.DataFrame(tf)
     gripper_df = pd.DataFrame(gripper)
     gripper_df["val"] = gripper_df["val"].apply(lambda elem: elem / 100)
+    #
+    # Merge both DataFrames into one
+    traj = pd.merge_asof(tf_df, gripper_df, on="timestamp")
+    traj.dropna(inplace=True, ignore_index=True)
+    traj.rename(columns={"val": "gripper"}, inplace=True)
     print("Extracting TF & gripper data from Bag file: done ✓")
-    return tf_df, gripper_df
+    return traj
 
 
 def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):

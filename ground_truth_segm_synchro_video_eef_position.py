@@ -195,31 +195,36 @@ def extract_eef_data_from_rosbag(bagfile):
     tf_df = pd.DataFrame(tf)
     gripper_df = pd.DataFrame(gripper)
     gripper_df["val"] = gripper_df["val"].apply(lambda elem: elem / 100)
+    #
+    # Merge both DataFrames into one
+    traj = pd.merge_asof(tf_df, gripper_df, on="timestamp")
+    traj.dropna(inplace=True, ignore_index=True)
+    traj.rename(columns={"val": "gripper"}, inplace=True)
     print("Extracting TF & gripper data from Bag file: done ✓")
-    return tf_df, gripper_df
+    return traj
 
 
-tf_df, gripper_df = extract_eef_data_from_rosbag(BAG_FILE)
+traj = extract_eef_data_from_rosbag(BAG_FILE)
 
 
-def get_line_plot(tf_df, gripper_df, epoch_req, gt_segm_dict=None, skill_choice=None):
+def get_line_plot(traj, epoch_req, gt_segm_dict=None, skill_choice=None):
     slider_ts = dt.datetime.fromtimestamp(epoch_req) - dt.timedelta(hours=1)
     vline = hv.VLine(slider_ts).opts(color="black", line_dash="dashed", line_width=3)
-    lineplot_tf = tf_df.hvplot(x="timestamp", y=["x", "y", "z"], height=400).opts(
+    lineplot_tf = traj.hvplot(x="timestamp", y=["x", "y", "z"], height=400).opts(
         xlabel="Time", ylabel="Position"
     )
-    lineplot_grip = gripper_df.hvplot(x="timestamp", y=["val"], label="gripper")
+    lineplot_grip = traj.hvplot(x="timestamp", y=["gripper"], label="gripper")
     # overlay.opts(opts.VLine(color="red", line_dash='dashed', line_width=6))
     overlay = lineplot_tf * lineplot_grip * vline
-    fill_min = np.min([tf_df.x.min(), tf_df.y.min(), tf_df.z.min()])
-    fill_max = np.max([tf_df.x.max(), tf_df.y.max(), tf_df.z.max()])
+    fill_min = np.min([traj.x.min(), traj.y.min(), traj.z.min()])
+    fill_max = np.max([traj.x.max(), traj.y.max(), traj.z.max()])
 
     if skill_choice == "HigherLevel":
         for sect_key in gt_segm_dict[skill_choice]:
             sect_val = gt_segm_dict[skill_choice][sect_key]
-            xs = tf_df.timestamp[
+            xs = traj.timestamp[
                 (
-                    tf_df.timestamp
+                    traj.timestamp
                     > pd.Timestamp(
                         dt.datetime.fromtimestamp(sect_val["ini"])
                         - dt.timedelta(hours=1),
@@ -227,7 +232,7 @@ def get_line_plot(tf_df, gripper_df, epoch_req, gt_segm_dict=None, skill_choice=
                     )
                 )
                 & (
-                    tf_df.timestamp
+                    traj.timestamp
                     < pd.Timestamp(
                         dt.datetime.fromtimestamp(sect_val["end"])
                         - dt.timedelta(hours=1),
@@ -251,9 +256,9 @@ def get_line_plot(tf_df, gripper_df, epoch_req, gt_segm_dict=None, skill_choice=
         for idx, sect_key in enumerate(gt_segm_dict[skill_choice]):
             sect_val = gt_segm_dict[skill_choice][sect_key]
             for sect_cur in sect_val:
-                xs = tf_df.timestamp[
+                xs = traj.timestamp[
                     (
-                        tf_df.timestamp
+                        traj.timestamp
                         > pd.Timestamp(
                             dt.datetime.fromtimestamp(sect_cur["ini"])
                             - dt.timedelta(hours=1),
@@ -261,7 +266,7 @@ def get_line_plot(tf_df, gripper_df, epoch_req, gt_segm_dict=None, skill_choice=
                         )
                     )
                     & (
-                        tf_df.timestamp
+                        traj.timestamp
                         < pd.Timestamp(
                             dt.datetime.fromtimestamp(sect_cur["end"])
                             - dt.timedelta(hours=1),
@@ -295,8 +300,8 @@ skill_choice_widget = pn.widgets.Select(
 video_path = extract_video_from_bag(bagfile=BAG_FILE, fps=20)
 clip = VideoFileClip(video_path)
 frames_count = clip.reader.n_frames - 1
-epoch_ini = int(tf_df.timestamp.iloc[0].timestamp()) + 1
-epoch_end = int(tf_df.timestamp.iloc[-1].timestamp())
+epoch_ini = int(traj.timestamp.iloc[0].timestamp()) + 1
+epoch_end = int(traj.timestamp.iloc[-1].timestamp())
 slider_widget = pn.widgets.IntSlider(
     name="Epoch",
     value=int((epoch_end - epoch_ini) / 2 + epoch_ini),
@@ -317,8 +322,7 @@ def get_frame_plot(epoch_req, epoch_ini):
 
 line_plt = pn.bind(
     get_line_plot,
-    tf_df=tf_df,
-    gripper_df=gripper_df,
+    traj=traj,
     epoch_req=slider_widget,
     skill_choice=skill_choice_widget,
     gt_segm_dict=gt_segm_dict,
