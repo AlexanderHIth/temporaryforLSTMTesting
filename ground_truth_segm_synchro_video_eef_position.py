@@ -6,7 +6,7 @@ import holoviews as hv
 import numpy as np
 import pandas as pd
 import panel as pn
-from PFCS.scripts.gt_plot import read_data
+# from PFCS.scripts.gt_plot import read_data
 import imageio.v3 as iio
 from PIL import Image
 from moviepy import VideoFileClip
