@@ -5,6 +5,9 @@ from tqdm.auto import tqdm
 from rosbags.highlevel import AnyReader
 from rosbags.typesys import Stores, get_typestore
 import json
+import cv2
+import imageio.v3 as iio
+from PIL import Image
 
 
 def extract_eef_data_from_rosbag(bagfile):
@@ -73,3 +76,104 @@ def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
     if gt_segm_dict is None:
         print(f"Segmentation data not found in `{ground_truth_segm_file}`")
     return gt_segm_dict
+
+
+def extract_video_from_bag(bagfile, fps=20):
+    print("Extracting video from Bag file...")
+
+    extension = "mkv"
+    video_path = bagfile.parent / (bagfile.stem + "." + extension)
+
+    # Initialize video writer
+    img_height, img_width, _ = get_img_height_width(bagfile=bagfile)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Use 'mp4v' for MP4 format
+    video = cv2.VideoWriter(
+        filename=video_path, fourcc=fourcc, fps=fps, frameSize=(img_width, img_height)
+    )
+
+    # Create a type store to use if the bag has no message definitions.
+    typestore = get_typestore(Stores.ROS1_NOETIC)
+
+    # Create reader instance and open for reading.
+    with AnyReader([bagfile], default_typestore=typestore) as reader:
+        connections = [x for x in reader.connections if x.topic == "/imu_raw/Imu"]
+        msg_nb_total = len(list(reader.messages(connections=connections)))
+        for connection, timestamp, rawdata in tqdm(
+            reader.messages(connections=connections), total=msg_nb_total
+        ):
+            msg = reader.deserialize(rawdata, connection.msgtype)
+            # print(msg.header.frame_id
+            if connection.msgtype == "sensor_msgs/msg/Image":
+                frame = msg.data.reshape((msg.height, msg.width, 3))
+
+                current_ts = pd.to_datetime(timestamp, utc=True).tz_convert("EST")
+
+                img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+                # Add timestamp overlay on image
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                txt1 = current_ts.isoformat()
+                txt2 = str(current_ts.timestamp())
+                fontScale = 0.5
+                white = (255, 255, 255)
+                fontthickness = 1
+                cv2.putText(
+                    img=img,
+                    text=txt1,
+                    org=(10, 30),
+                    fontFace=font,
+                    fontScale=fontScale,
+                    color=white,
+                    thickness=fontthickness,
+                )
+                cv2.putText(
+                    img=img,
+                    text=txt2,
+                    org=(10, 50),
+                    fontFace=font,
+                    fontScale=fontScale,
+                    color=white,
+                    thickness=fontthickness,
+                )
+
+                # Add images to the video
+                video.write(img)
+
+    # Release the video writer
+    video.release()
+    cv2.destroyAllWindows()
+    print("Extracting video from Bag file: done ✓")
+    print(f"Video path: {video_path}")
+    return video_path
+
+
+def get_video_frame(index, video_path):
+    # read a single frame
+    try:
+        frame = iio.imread(
+            video_path,
+            index=index,
+            plugin="pyav",
+        )
+        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return img
+    except StopIteration:
+        print("Reached the end of the video file")
+        return np.asarray(Image.new("RGB", (3840, 2160), (0, 0, 0)))
+        # return np.asarray(Image.new("RGB", (720, 405), (0, 0, 0)))
+
+
+def get_img_height_width(bagfile):
+    # Create a type store to use if the bag has no message definitions.
+    typestore = get_typestore(Stores.ROS1_NOETIC)
+
+    # Create reader instance and open for reading.
+    with AnyReader([bagfile], default_typestore=typestore) as reader:
+        connections = [x for x in reader.connections if x.topic == "/imu_raw/Imu"]
+        for connection, timestamp, rawdata in reader.messages(connections=connections):
+            msg = reader.deserialize(rawdata, connection.msgtype)
+            # print(msg.header.frame_id
+            if connection.msgtype == "sensor_msgs/msg/Image":
+                # print(msg)
+                break
+    return msg.height, msg.width, msg.data

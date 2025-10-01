@@ -6,10 +6,12 @@ import holoviews as hv
 import numpy as np
 import pandas as pd
 import panel as pn
+
 # from PFCS.scripts.gt_plot import read_data
 import imageio.v3 as iio
 from PIL import Image
-from moviepy import VideoFileClip
+
+# from moviepy import VideoFileClip
 from rosbags.typesys import Stores, get_typestore
 from rosbags.highlevel import AnyReader
 import cv2
@@ -298,8 +300,8 @@ skill_choice_widget = pn.widgets.Select(
     name="Skill", value="", options=list(gt_file_keys)
 )
 video_path = extract_video_from_bag(bagfile=BAG_FILE, fps=20)
-clip = VideoFileClip(video_path)
-frames_count = clip.reader.n_frames - 1
+# clip = VideoFileClip(video_path)
+# frames_count = clip.reader.n_frames - 1
 epoch_ini = int(traj.timestamp.iloc[0].timestamp()) + 1
 epoch_end = int(traj.timestamp.iloc[-1].timestamp())
 slider_widget = pn.widgets.IntSlider(
