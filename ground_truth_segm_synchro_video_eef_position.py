@@ -29,30 +29,73 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # )
 # hv.extension('bokeh')
 
-DATA_PATH_ROOT = Path("/home/kir0ul/Projects/table-task-ur5e/")
-BAG_FILE = DATA_PATH_ROOT / "rosbag2_2025-09-08_19-46-18_2025-09-08-19-46-19.bag"
-GROUND_TRUTH_SEGM_FILE = DATA_PATH_ROOT / "table_task_UR5e_ground_truth.json"
+# DATA_PATH_ROOT = Path("/home/kir0ul/Projects/table-task-ur5e/")
+# GROUND_TRUTH_SEGM_FILE = DATA_PATH_ROOT / "table_task_UR5e_ground_truth.json"
+GROUND_TRUTH_SEGM_FILE = Path(".") / "table_task_UR5e_ground_truth.json"
+# BAG_FILE = DATA_PATH_ROOT / "rosbag2_2025-09-08_19-46-18_2025-09-08-19-46-19.bag"
+BAGFILE_NUM = 0
+
 
 pn.extension(design="material", sizing_mode="stretch_width")
 
 
-def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
+def get_bagfiles_list(ground_truth_segm_file):
     if not ground_truth_segm_file.exists():
         print(
             "JSON ground truth segmentation file not found:\n"
             f"`{ground_truth_segm_file}`"
         )
         return
+
+    # Load JSON as dict
     with open(ground_truth_segm_file) as fid:
         json_str = fid.read()
-    gt_segm_all = json.loads(json_str)
+    json_str = json.loads(json_str)
+    data_path_root = json_str.get("root_path")
+    gt_array = json_str.get("groundtruth")
+    bagfiles = [item.get("filename") for item in gt_array]
+    return data_path_root, bagfiles
+
+
+def json2dict(ground_truth_segm_file):
+    if not ground_truth_segm_file.exists():
+        print(
+            "JSON ground truth segmentation file not found:\n"
+            f"`{ground_truth_segm_file}`"
+        )
+        return
+
+    # Load JSON as dict
+    with open(ground_truth_segm_file) as fid:
+        json_str = fid.read()
+    json_dict = json.loads(json_str)
+
+    return json_dict
+
+
+def get_bagfiles_from_json(ground_truth_segm_file):
+    json_dict = json2dict(ground_truth_segm_file)
+    root_path = Path(json_dict.get("root_path"))
+    bagfiles = []
+    for item in json_dict.get("groundtruth"):
+        bagpath = root_path / item.get("filename")
+        bagfiles.append(bagpath)
+    return bagfiles
+
+
+def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
+    json_dict = json2dict(ground_truth_segm_file)
+
+    # Find segmention ground truth from file
     gt_segm_dict = None
-    for item in gt_segm_all:
+    for item in json_dict.get("groundtruth"):
         if item.get("filename") == bagfile.name:
             gt_segm_dict = item
             break
+
     if gt_segm_dict is None:
         print(f"Segmentation data not found in `{ground_truth_segm_file}`")
+
     return gt_segm_dict
 
 
@@ -131,7 +174,7 @@ def extract_video_from_bag(bagfile, fps=20):
                 )
 
                 # Add images to the video
-                video.write(img)
+                video.write(cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
     # Release the video writer
     video.release()
@@ -149,8 +192,9 @@ def get_video_frame(index, video_path):
             index=index,
             plugin="pyav",
         )
-        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        return img
+        # img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # return img
+        return frame
     except StopIteration:
         print("Reached the end of the video file")
         return np.asarray(Image.new("RGB", (3840, 2160), (0, 0, 0)))
@@ -204,9 +248,6 @@ def extract_eef_data_from_rosbag(bagfile):
     traj.rename(columns={"val": "gripper"}, inplace=True)
     print("Extracting TF & gripper data from Bag file: done ✓")
     return traj
-
-
-traj = extract_eef_data_from_rosbag(BAG_FILE)
 
 
 def get_line_plot(traj, epoch_req, gt_segm_dict=None, skill_choice=None):
@@ -290,28 +331,7 @@ def get_line_plot(traj, epoch_req, gt_segm_dict=None, skill_choice=None):
     return overlay.opts(ylim=(fill_min - 0.1, fill_max + 0.1))
 
 
-gt_segm_dict = get_ground_truth_segmentation(
-    ground_truth_segm_file=GROUND_TRUTH_SEGM_FILE, bagfile=BAG_FILE
-)
-gt_file_keys = set(gt_segm_dict.keys())
-gt_file_keys.remove("filename")
-gt_file_keys.add("")
-skill_choice_widget = pn.widgets.Select(
-    name="Skill", value="", options=list(gt_file_keys)
-)
-video_path = extract_video_from_bag(bagfile=BAG_FILE, fps=20)
-# clip = VideoFileClip(video_path)
-# frames_count = clip.reader.n_frames - 1
-epoch_ini = int(traj.timestamp.iloc[0].timestamp()) + 1
-epoch_end = int(traj.timestamp.iloc[-1].timestamp())
-slider_widget = pn.widgets.IntSlider(
-    name="Epoch",
-    value=int((epoch_end - epoch_ini) / 2 + epoch_ini),
-    start=epoch_ini,
-    end=epoch_end - 1,
-)
-
-
+@pn.cache
 def get_frame_plot(epoch_req, epoch_ini):
     idx = epoch_req - epoch_ini
     img = get_video_frame(
@@ -322,11 +342,41 @@ def get_frame_plot(epoch_req, epoch_ini):
     return frame_plot
 
 
+data_path_root, bagfiles = get_bagfiles_list(
+    ground_truth_segm_file=GROUND_TRUTH_SEGM_FILE
+)
+files_choice_dropdown = pn.widgets.Select(name="File", value="", options=bagfiles)
+
+
+bagfiles = get_bagfiles_from_json(ground_truth_segm_file=GROUND_TRUTH_SEGM_FILE)
+bagfile = bagfiles[BAGFILE_NUM]
+gt_segm_dict = get_ground_truth_segmentation(
+    ground_truth_segm_file=GROUND_TRUTH_SEGM_FILE, bagfile=bagfile
+)
+gt_file_keys = set(gt_segm_dict.keys())
+gt_file_keys.remove("filename")
+gt_file_keys.add("")
+skill_choice_dropdown = pn.widgets.Select(
+    name="Skill", value="", options=list(gt_file_keys)
+)
+video_path = extract_video_from_bag(bagfile=bagfile, fps=20)
+traj = extract_eef_data_from_rosbag(bagfile=bagfile)
+epoch_ini = int(traj.timestamp.iloc[0].timestamp()) + 1
+epoch_end = int(traj.timestamp.iloc[-1].timestamp())
+slider_widget = pn.widgets.IntSlider(
+    name="Epoch",
+    value=int((epoch_end - epoch_ini) / 2 + epoch_ini),
+    start=epoch_ini,
+    end=epoch_end - 1,
+)
+
+
+# Widgets & web app logic
 line_plt = pn.bind(
     get_line_plot,
     traj=traj,
     epoch_req=slider_widget,
-    skill_choice=skill_choice_widget,
+    skill_choice=skill_choice_dropdown,
     gt_segm_dict=gt_segm_dict,
 )
 img_plt = pn.bind(
