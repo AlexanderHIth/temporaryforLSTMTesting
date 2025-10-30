@@ -1,0 +1,89 @@
+#+TITLE: Timeseries segmentation feedback
+#+author: Andrea Pierré
+#+date: October 31, 2025
+
+* HEADER :noexport:
+#+SETUPFILE: ./style.org
+
+* Context
+** Robot learning of long horizon demonstrations
+{{{RED(Video)}}} Video! {{{TODO}}}
+
+
+*** Left :BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.5
+:END:
+[[file:medias/ground-truth-segmentation-higher-level.png]]
+*** Right :BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.5
+:END:
+[[file:medias/ground-truth-segmentation-lower-level.png]]
+
+
+#+begin_export latex
+\begin{textblock}{10}(1.2,13)%
+\rightarrow~\alert{Small data} \ie{} few demonstrations
+\end{textblock}
+#+end_export
+
+* Unsupervised learning -- State Detection
+** H(S)MM -- Higher level movements {{{faicon(close)}}}
+*** Left :BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.5
+:END:
+[[file:medias/unsupervised-HMM.png]]
+[[file:medias/HSMM.png]]
+*** Right :BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.5
+:END:
+[[file:medias/GP-HSMM.png]]
+[[file:medias/ground-truth-segmentation-higher-level_old.png]]
+* Unsupervised learning -- Change Point Detection
+** Greedy Gaussian Segmentation -- Higher level movements {{{faicon(close)}}}
+[[file:medias/GGS.png]]
+#+ATTR_LaTeX: :height 0.45\textheight
+[[file:medias/ground-truth-segmentation-higher-level_old.png]]
+** ruptures -- Lower level movements
+[[file:medias/ruptures.png]]
+* Supervised learning
+** Supervised HMM -- Lower level movements {{{faicon(check-circle-o)}}}
+#+ATTR_LaTeX: :height 0.45\textheight
+[[file:medias/ground-truth-segmentation-lower-level.png]]
+#+ATTR_LaTeX: :height 0.45\textheight
+[[file:medias/supervised-HMM-cont-lower-level.png]]
+** Supervised HMM -- Higher level movements {{{faicon(close)}}}
+#+ATTR_LaTeX: :height 0.45\textheight
+[[file:medias/ground-truth-segmentation-higher-level.png]]
+#+ATTR_LaTeX: :height 0.45\textheight
+[[file:medias/supervised-HMM-cont-higher-level.png]]
+** XGBoost -- Higher level movements {{{faicon(close)}}}
+| Split | F1       | Accuracy |
+|-------+----------+----------|
+| $1$   | $0.2722$ | $0.3741$ |
+| $2$   | $0.1639$ | $0.1872$ |
+| $3$   | $0.1684$ | $0.3381$ |
+| $4$   | $0.1469$ | $0.3501$ |
+| $5$   | $0.1713$ | $0.3458$ |
+
+* Conclusion
+** Conclusion
+- Can model *lower* level movements with good performance
+- Modeling *higher* level movements remains a challenge
+** Questions
+- Any other method I may have missed that could help solve this problem?
+  - Variational inference?
+- How to integrate context, {{{EG}}} video?
+  - Multimodal transformer but probably too data hungry?
+** \nbsp{}
+:PROPERTIES:
+:BEAMER_opt: standout
+:END:
+Questions ?
+* COMMENT Add plain option to Beamer TOC
+% Local variables:
+% org-beamer-outline-frame-options: "plain"
+% End:

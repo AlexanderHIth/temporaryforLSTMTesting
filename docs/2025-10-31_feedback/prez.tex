@@ -1,0 +1,174 @@
+% Created 2025-10-30 Thu 11:59
+% Intended LaTeX compiler: lualatex
+\documentclass[bigger]{beamer}
+\usepackage{amsmath}
+\usepackage{fontspec}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\usetheme[progressbar=foot, sectionpage=none, numbering=fraction]{metropolis}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\usepackage{diagbox}
+\usepackage{latexcolors}
+\usetikzlibrary{automata, positioning, arrows, arrows.meta}
+\usepackage{diagbox}
+\usepackage{dsfont}
+\usepackage{amsmath}
+\usepackage{fontawesome}
+\usepackage[ruled]{algorithm2e}
+\usepackage[absolute, overlay]{textpos}
+\usepackage{xcolor}
+\definecolor{UmlBlue}{HTML}{0067b1} \setbeamercolor{progress bar}{fg=UmlBlue} \setbeamercolor{title separator}{fg=UmlBlue}
+\setbeamercolor{progress bar in head/foot}{fg=UmlBlue} \setbeamercolor{progress bar in section page}{fg=UmlBlue} \setbeamercolor{alerted text}{fg=UmlBlue}
+\pretocmd{\tableofcontents}{\thispagestyle{empty}}{}{}
+\usepackage[all]{foreign}
+\usepackage{multimedia}
+\usepackage{fontawesome}
+\usetheme{default}
+\author{Andrea Pierré}
+\date{October 31, 2025}
+\title{Timeseries segmentation feedback}
+\titlegraphic{\hfill\includegraphics[height=1.5cm]{medias/UML_logo.eps}}
+\setbeamercovered{transparent=10}
+\setbeamertemplate{section in toc}[sections numbered]
+\AtBeginSection[]{\begin{frame}[plain, noframenumbering]{Outline}    \setbeamertemplate{section in toc}[sections numbered]\setbeamertemplate{subsection in toc}[subsections numbered]\tableofcontents[currentsection, currentsubsection]\end{frame}}
+\AtBeginSubsection[]{\begin{frame}[plain, noframenumbering]{Outline}\setbeamertemplate{section in toc}[sections numbered]\setbeamertemplate{subsection in toc}[subsections numbered]\tableofcontents[currentsection,currentsubsection]\end{frame}}
+\definecolor{headercolor}{HTML}{232323}
+\setbeamercolor{normal text}{%
+% bg=,
+fg=headercolor
+}
+\hypersetup{
+ pdfauthor={Andrea Pierré},
+ pdftitle={Timeseries segmentation feedback},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 30.2 (Org mode 9.7.34)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\begin{frame}[plain]{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Context}
+\label{sec:org8ca5813}
+\begin{frame}[label={sec:org7794f9c}]{Robot learning of long horizon demonstrations}
+{\color{red}Video} Video! {\color{red}TODO}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\begin{center}
+\includegraphics[width=.9\linewidth]{medias/ground-truth-segmentation-higher-level.png}
+\end{center}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\begin{center}
+\includegraphics[width=.9\linewidth]{medias/ground-truth-segmentation-lower-level.png}
+\end{center}
+
+
+\begin{textblock}{10}(1.2,13)%
+\rightarrow~\alert{Small data} \ie{} few demonstrations
+\end{textblock}
+\end{column}
+\end{columns}
+\end{frame}
+\section{Unsupervised learning -- State Detection}
+\label{sec:org10cad63}
+\begin{frame}[label={sec:orgcf4b6d8}]{H(S)MM -- Higher level movements \faicon{close}}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\begin{center}
+\includegraphics[width=.9\linewidth]{medias/unsupervised-HMM.png}
+\end{center}
+\begin{center}
+\includegraphics[width=.9\linewidth]{medias/HSMM.png}
+\end{center}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\begin{center}
+\includegraphics[width=.9\linewidth]{medias/GP-HSMM.png}
+\end{center}
+\begin{center}
+\includegraphics[width=.9\linewidth]{medias/ground-truth-segmentation-higher-level_old.png}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+\section{Unsupervised learning -- Change Point Detection}
+\label{sec:org8c7eb39}
+\begin{frame}[label={sec:orga77cb17}]{Greedy Gaussian Segmentation -- Higher level movements \faicon{close}}
+\begin{center}
+\includegraphics[width=.9\linewidth]{medias/GGS.png}
+\end{center}
+\begin{center}
+\includegraphics[height=0.45\textheight]{medias/ground-truth-segmentation-higher-level_old.png}
+\end{center}
+\end{frame}
+\begin{frame}[label={sec:org0ef5f0d}]{ruptures -- Lower level movements}
+\begin{center}
+\includegraphics[width=.9\linewidth]{medias/ruptures.png}
+\end{center}
+\end{frame}
+\section{Supervised learning}
+\label{sec:org99bb363}
+\begin{frame}[label={sec:org1f60518}]{Supervised HMM -- Lower level movements \faicon{check-circle-o}}
+\begin{center}
+\includegraphics[height=0.45\textheight]{medias/ground-truth-segmentation-lower-level.png}
+\end{center}
+\begin{center}
+\includegraphics[height=0.45\textheight]{medias/supervised-HMM-cont-lower-level.png}
+\end{center}
+\end{frame}
+\begin{frame}[label={sec:org612821b}]{Supervised HMM -- Higher level movements \faicon{close}}
+\begin{center}
+\includegraphics[height=0.45\textheight]{medias/ground-truth-segmentation-higher-level.png}
+\end{center}
+\begin{center}
+\includegraphics[height=0.45\textheight]{medias/supervised-HMM-cont-higher-level.png}
+\end{center}
+\end{frame}
+\begin{frame}[label={sec:orge11f866}]{XGBoost -- Higher level movements \faicon{close}}
+\begin{center}
+\begin{tabular}{lll}
+Split & F1 & Accuracy\\
+\hline
+\(1\) & \(0.2722\) & \(0.3741\)\\
+\(2\) & \(0.1639\) & \(0.1872\)\\
+\(3\) & \(0.1684\) & \(0.3381\)\\
+\(4\) & \(0.1469\) & \(0.3501\)\\
+\(5\) & \(0.1713\) & \(0.3458\)\\
+\end{tabular}
+\end{center}
+\end{frame}
+\section{Conclusion}
+\label{sec:orgbf50cbb}
+\begin{frame}[label={sec:org83cdb6b}]{Conclusion}
+\begin{itemize}
+\item Can model \alert{lower} level movements with good performance
+\item Modeling \alert{higher} level movements remains a challenge
+\end{itemize}
+\end{frame}
+\begin{frame}[label={sec:orgc940033}]{Questions}
+\begin{itemize}
+\item Any other method I may have missed that could help solve this problem?
+\begin{itemize}
+\item Variational inference?
+\end{itemize}
+\item How to integrate context, {\eg{}} video?
+\begin{itemize}
+\item Multimodal transformer but probably too data hungry?
+\end{itemize}
+\end{itemize}
+\end{frame}
+\begin{frame}[label={sec:org885aec2},standout]{~}
+Questions ?
+\end{frame}
+\end{document}
