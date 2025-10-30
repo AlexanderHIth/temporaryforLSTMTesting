@@ -65,16 +65,22 @@ def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
             f"`{ground_truth_segm_file}`"
         )
         return
+
+    # Load JSON as dict
     with open(ground_truth_segm_file) as fid:
         json_str = fid.read()
-    gt_segm_all = json.loads(json_str)
+    json_dict = json.loads(json_str)
+
+    # Find segmention ground truth from file
     gt_segm_dict = None
-    for item in gt_segm_all:
+    for item in json_dict.get("groundtruth"):
         if item.get("filename") == bagfile.name:
             gt_segm_dict = item
             break
+
     if gt_segm_dict is None:
         print(f"Segmentation data not found in `{ground_truth_segm_file}`")
+
     return gt_segm_dict
 
 
@@ -137,7 +143,7 @@ def extract_video_from_bag(bagfile, fps=20):
                 )
 
                 # Add images to the video
-                video.write(img)
+                video.write(cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
     # Release the video writer
     video.release()
