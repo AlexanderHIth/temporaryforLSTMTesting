@@ -7,7 +7,11 @@
 
 * Context
 ** Robot learning of long horizon demonstrations
-{{{RED(Video)}}} Video! {{{TODO}}}
+#+begin_export latex
+\begin{center}
+\movie{\includegraphics[height=0.4\textheight]{medias/thumb.png}}{medias/rosbag2_2025-09-08_19-46-18_2025-09-08-19-46-19.mkv}
+\end{center}
+#+end_export
 
 
 *** Left :BMCOL:
@@ -23,7 +27,7 @@
 
 
 #+begin_export latex
-\begin{textblock}{10}(1.2,13)%
+\begin{textblock}{10}(1.2,14.7)%
 \rightarrow~\alert{Small data} \ie{} few demonstrations
 \end{textblock}
 #+end_export

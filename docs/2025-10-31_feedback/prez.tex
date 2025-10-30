@@ -1,4 +1,4 @@
-% Created 2025-10-30 Thu 11:59
+% Created 2025-10-30 Thu 19:07
 % Intended LaTeX compiler: lualatex
 \documentclass[bigger]{beamer}
 \usepackage{amsmath}
@@ -59,9 +59,11 @@ fg=headercolor
 \end{frame}
 
 \section{Context}
-\label{sec:org8ca5813}
-\begin{frame}[label={sec:org7794f9c}]{Robot learning of long horizon demonstrations}
-{\color{red}Video} Video! {\color{red}TODO}
+\label{sec:org9c063a3}
+\begin{frame}[label={sec:orge31ce63}]{Robot learning of long horizon demonstrations}
+\begin{center}
+\movie{\includegraphics[height=0.4\textheight]{medias/thumb.png}}{medias/rosbag2_2025-09-08_19-46-18_2025-09-08-19-46-19.mkv}
+\end{center}
 \begin{columns}
 \begin{column}{0.5\columnwidth}
 \begin{center}
@@ -74,15 +76,15 @@ fg=headercolor
 \end{center}
 
 
-\begin{textblock}{10}(1.2,13)%
+\begin{textblock}{10}(1.2,14.7)%
 \rightarrow~\alert{Small data} \ie{} few demonstrations
 \end{textblock}
 \end{column}
 \end{columns}
 \end{frame}
 \section{Unsupervised learning -- State Detection}
-\label{sec:org10cad63}
-\begin{frame}[label={sec:orgcf4b6d8}]{H(S)MM -- Higher level movements \faicon{close}}
+\label{sec:org7f04c82}
+\begin{frame}[label={sec:org76e8fde}]{H(S)MM -- Higher level movements \faicon{close}}
 \begin{columns}
 \begin{column}{0.5\columnwidth}
 \begin{center}
@@ -103,8 +105,8 @@ fg=headercolor
 \end{columns}
 \end{frame}
 \section{Unsupervised learning -- Change Point Detection}
-\label{sec:org8c7eb39}
-\begin{frame}[label={sec:orga77cb17}]{Greedy Gaussian Segmentation -- Higher level movements \faicon{close}}
+\label{sec:orgf16bcd7}
+\begin{frame}[label={sec:org7aa9c32}]{Greedy Gaussian Segmentation -- Higher level movements \faicon{close}}
 \begin{center}
 \includegraphics[width=.9\linewidth]{medias/GGS.png}
 \end{center}
@@ -112,14 +114,14 @@ fg=headercolor
 \includegraphics[height=0.45\textheight]{medias/ground-truth-segmentation-higher-level_old.png}
 \end{center}
 \end{frame}
-\begin{frame}[label={sec:org0ef5f0d}]{ruptures -- Lower level movements}
+\begin{frame}[label={sec:orgefd51ad}]{ruptures -- Lower level movements}
 \begin{center}
 \includegraphics[width=.9\linewidth]{medias/ruptures.png}
 \end{center}
 \end{frame}
 \section{Supervised learning}
-\label{sec:org99bb363}
-\begin{frame}[label={sec:org1f60518}]{Supervised HMM -- Lower level movements \faicon{check-circle-o}}
+\label{sec:orge7f0465}
+\begin{frame}[label={sec:orgf529db4}]{Supervised HMM -- Lower level movements \faicon{check-circle-o}}
 \begin{center}
 \includegraphics[height=0.45\textheight]{medias/ground-truth-segmentation-lower-level.png}
 \end{center}
@@ -127,7 +129,7 @@ fg=headercolor
 \includegraphics[height=0.45\textheight]{medias/supervised-HMM-cont-lower-level.png}
 \end{center}
 \end{frame}
-\begin{frame}[label={sec:org612821b}]{Supervised HMM -- Higher level movements \faicon{close}}
+\begin{frame}[label={sec:org7258fe8}]{Supervised HMM -- Higher level movements \faicon{close}}
 \begin{center}
 \includegraphics[height=0.45\textheight]{medias/ground-truth-segmentation-higher-level.png}
 \end{center}
@@ -135,7 +137,7 @@ fg=headercolor
 \includegraphics[height=0.45\textheight]{medias/supervised-HMM-cont-higher-level.png}
 \end{center}
 \end{frame}
-\begin{frame}[label={sec:orge11f866}]{XGBoost -- Higher level movements \faicon{close}}
+\begin{frame}[label={sec:org1e5b520}]{XGBoost -- Higher level movements \faicon{close}}
 \begin{center}
 \begin{tabular}{lll}
 Split & F1 & Accuracy\\
@@ -149,14 +151,14 @@ Split & F1 & Accuracy\\
 \end{center}
 \end{frame}
 \section{Conclusion}
-\label{sec:orgbf50cbb}
-\begin{frame}[label={sec:org83cdb6b}]{Conclusion}
+\label{sec:org44116a7}
+\begin{frame}[label={sec:org631354c}]{Conclusion}
 \begin{itemize}
 \item Can model \alert{lower} level movements with good performance
 \item Modeling \alert{higher} level movements remains a challenge
 \end{itemize}
 \end{frame}
-\begin{frame}[label={sec:orgc940033}]{Questions}
+\begin{frame}[label={sec:org58dabbe}]{Questions}
 \begin{itemize}
 \item Any other method I may have missed that could help solve this problem?
 \begin{itemize}
@@ -168,7 +170,7 @@ Split & F1 & Accuracy\\
 \end{itemize}
 \end{itemize}
 \end{frame}
-\begin{frame}[label={sec:org885aec2},standout]{~}
+\begin{frame}[label={sec:org476171e},standout]{~}
 Questions ?
 \end{frame}
 \end{document}
