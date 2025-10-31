@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
 import pandas as pd
 from tqdm.auto import tqdm
 from rosbags.highlevel import AnyReader
@@ -8,6 +9,7 @@ import json
 import cv2
 import imageio.v3 as iio
 from PIL import Image
+import numpy as np
 
 
 def extract_eef_data_from_rosbag(bagfile):
@@ -58,7 +60,7 @@ def extract_eef_data_from_rosbag(bagfile):
     return traj
 
 
-def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
+def json2dict(ground_truth_segm_file):
     if not ground_truth_segm_file.exists():
         print(
             "JSON ground truth segmentation file not found:\n"
@@ -70,6 +72,22 @@ def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
     with open(ground_truth_segm_file) as fid:
         json_str = fid.read()
     json_dict = json.loads(json_str)
+
+    return json_dict
+
+
+def get_bagfiles_from_json(ground_truth_segm_file):
+    json_dict = json2dict(ground_truth_segm_file)
+    root_path = Path(json_dict.get("root_path"))
+    bagfiles = []
+    for item in json_dict.get("groundtruth"):
+        bagpath = root_path / item.get("filename")
+        bagfiles.append(bagpath)
+    return bagfiles
+
+
+def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
+    json_dict = json2dict(ground_truth_segm_file)
 
     # Find segmention ground truth from file
     gt_segm_dict = None
@@ -161,8 +179,9 @@ def get_video_frame(index, video_path):
             index=index,
             plugin="pyav",
         )
-        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        return img
+        # img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # return img
+        return frame
     except StopIteration:
         print("Reached the end of the video file")
         return np.asarray(Image.new("RGB", (3840, 2160), (0, 0, 0)))

@@ -8,18 +8,23 @@ import pandas as pd
 import panel as pn
 
 # from PFCS.scripts.gt_plot import read_data
-import imageio.v3 as iio
 from PIL import Image
 
 # from moviepy import VideoFileClip
 from rosbags.typesys import Stores, get_typestore
 from rosbags.highlevel import AnyReader
-import cv2
 import warnings
 import datetime as dt
 import json
 from tqdm.auto import tqdm
+from segmentation_utils import (
+    get_ground_truth_segmentation,
+    get_bagfiles_from_json,
+    extract_video_from_bag,
+    get_video_frame,
+)
 
+pn.extension()
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # PRIMARY_COLOR = "#0072B5"
@@ -55,150 +60,6 @@ def get_bagfiles_list(ground_truth_segm_file):
     gt_array = json_str.get("groundtruth")
     bagfiles = [item.get("filename") for item in gt_array]
     return data_path_root, bagfiles
-
-
-def json2dict(ground_truth_segm_file):
-    if not ground_truth_segm_file.exists():
-        print(
-            "JSON ground truth segmentation file not found:\n"
-            f"`{ground_truth_segm_file}`"
-        )
-        return
-
-    # Load JSON as dict
-    with open(ground_truth_segm_file) as fid:
-        json_str = fid.read()
-    json_dict = json.loads(json_str)
-
-    return json_dict
-
-
-def get_bagfiles_from_json(ground_truth_segm_file):
-    json_dict = json2dict(ground_truth_segm_file)
-    root_path = Path(json_dict.get("root_path"))
-    bagfiles = []
-    for item in json_dict.get("groundtruth"):
-        bagpath = root_path / item.get("filename")
-        bagfiles.append(bagpath)
-    return bagfiles
-
-
-def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
-    json_dict = json2dict(ground_truth_segm_file)
-
-    # Find segmention ground truth from file
-    gt_segm_dict = None
-    for item in json_dict.get("groundtruth"):
-        if item.get("filename") == bagfile.name:
-            gt_segm_dict = item
-            break
-
-    if gt_segm_dict is None:
-        print(f"Segmentation data not found in `{ground_truth_segm_file}`")
-
-    return gt_segm_dict
-
-
-def get_img_height_width(bagfile):
-    # Create a type store to use if the bag has no message definitions.
-    typestore = get_typestore(Stores.ROS1_NOETIC)
-
-    # Create reader instance and open for reading.
-    with AnyReader([bagfile], default_typestore=typestore) as reader:
-        connections = [x for x in reader.connections if x.topic == "/imu_raw/Imu"]
-        for connection, timestamp, rawdata in reader.messages(connections=connections):
-            msg = reader.deserialize(rawdata, connection.msgtype)
-            # print(msg.header.frame_id
-            if connection.msgtype == "sensor_msgs/msg/Image":
-                # print(msg)
-                break
-    return msg.height, msg.width, msg.data
-
-
-def extract_video_from_bag(bagfile, fps=20):
-    print("Extracting video from Bag file...")
-
-    extension = "mkv"
-    video_path = bagfile.parent / (bagfile.stem + "." + extension)
-
-    # Initialize video writer
-    img_height, img_width, _ = get_img_height_width(bagfile=bagfile)
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Use 'mp4v' for MP4 format
-    video = cv2.VideoWriter(
-        filename=video_path, fourcc=fourcc, fps=fps, frameSize=(img_width, img_height)
-    )
-
-    # Create a type store to use if the bag has no message definitions.
-    typestore = get_typestore(Stores.ROS1_NOETIC)
-
-    # Create reader instance and open for reading.
-    with AnyReader([bagfile], default_typestore=typestore) as reader:
-        connections = [x for x in reader.connections if x.topic == "/imu_raw/Imu"]
-        msg_nb_total = len(list(reader.messages(connections=connections)))
-        for connection, timestamp, rawdata in tqdm(
-            reader.messages(connections=connections), total=msg_nb_total
-        ):
-            msg = reader.deserialize(rawdata, connection.msgtype)
-            # print(msg.header.frame_id
-            if connection.msgtype == "sensor_msgs/msg/Image":
-                frame = msg.data.reshape((msg.height, msg.width, 3))
-
-                current_ts = pd.to_datetime(timestamp, utc=True).tz_convert("EST")
-
-                img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-                # Add timestamp overlay on image
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                txt1 = current_ts.isoformat()
-                txt2 = str(current_ts.timestamp())
-                fontScale = 0.5
-                white = (255, 255, 255)
-                fontthickness = 1
-                cv2.putText(
-                    img=img,
-                    text=txt1,
-                    org=(10, 30),
-                    fontFace=font,
-                    fontScale=fontScale,
-                    color=white,
-                    thickness=fontthickness,
-                )
-                cv2.putText(
-                    img=img,
-                    text=txt2,
-                    org=(10, 50),
-                    fontFace=font,
-                    fontScale=fontScale,
-                    color=white,
-                    thickness=fontthickness,
-                )
-
-                # Add images to the video
-                video.write(cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
-
-    # Release the video writer
-    video.release()
-    cv2.destroyAllWindows()
-    print("Extracting video from Bag file: done ✓")
-    print(f"Video path: {video_path}")
-    return video_path
-
-
-def get_video_frame(index, video_path):
-    # read a single frame
-    try:
-        frame = iio.imread(
-            video_path,
-            index=index,
-            plugin="pyav",
-        )
-        # img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        # return img
-        return frame
-    except StopIteration:
-        print("Reached the end of the video file")
-        return np.asarray(Image.new("RGB", (3840, 2160), (0, 0, 0)))
-        # return np.asarray(Image.new("RGB", (720, 405), (0, 0, 0)))
 
 
 @pn.cache
@@ -345,11 +206,11 @@ def get_frame_plot(epoch_req, epoch_ini):
 data_path_root, bagfiles = get_bagfiles_list(
     ground_truth_segm_file=GROUND_TRUTH_SEGM_FILE
 )
-files_choice_dropdown = pn.widgets.Select(name="File", value="", options=bagfiles)
 
 
 bagfiles = get_bagfiles_from_json(ground_truth_segm_file=GROUND_TRUTH_SEGM_FILE)
 bagfile = bagfiles[BAGFILE_NUM]
+
 gt_segm_dict = get_ground_truth_segmentation(
     ground_truth_segm_file=GROUND_TRUTH_SEGM_FILE, bagfile=bagfile
 )
@@ -384,13 +245,15 @@ img_plt = pn.bind(
     epoch_req=slider_widget,
     epoch_ini=epoch_ini,
 )
-
+# json_input = pn.widgets.FileInput()
+# bagfiles_choice_dropdown = pn.widgets.Select(
+#     name="Bag file", value="", options=bagfiles
+# )
 centered_img = pn.Row(pn.layout.HSpacer(), img_plt, pn.layout.HSpacer())
-
-
 pn.template.MaterialTemplate(
     site="Segmentation",
     title="Video vs. end effector position",
-    sidebar=[skill_choice_widget],
+    # sidebar=[json_input, bagfiles_choice_dropdown, skill_choice_dropdown],
+    sidebar=[skill_choice_dropdown],
     main=[centered_img, slider_widget, line_plt],
 ).servable()  # The ; is needed in the notebook to not display the template. Its not needed in a script
