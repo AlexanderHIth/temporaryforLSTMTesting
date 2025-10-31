@@ -1,6 +1,6 @@
-#+TITLE: Timeseries segmentation feedback
+#+TITLE: Long horizon segmentation
 #+author: Andrea Pierré
-#+date: October 31, 2025
+#+date: November 3, 2025
 
 * HEADER :noexport:
 #+SETUPFILE: ./style.org
@@ -27,8 +27,8 @@
 
 
 #+begin_export latex
-\begin{textblock}{10}(1.2,14.7)%
-\rightarrow~\alert{Small data} \ie{} few demonstrations
+\begin{textblock}{15}(1.2, 14.7)%
+\rightarrow~Extremely \alert{small} data \ie{} few demonstrations
 \end{textblock}
 #+end_export
 
@@ -91,3 +91,12 @@ Questions ?
 % Local variables:
 % org-beamer-outline-frame-options: "plain"
 % End:
+
+* COMMENT Feedback
+** Easy solution \to force the higher level movement to be composed of 2 lower level movements
+** Small RNN
+** Hybrid HMM + RNN
+** KNN to find higher level movements
+** Map a new timeseries tuple to known timeseries classes with similarity measure
+*** Basically Brendan's paper
+*** Moving window to compare to previous segments
