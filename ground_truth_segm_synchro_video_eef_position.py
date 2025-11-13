@@ -38,7 +38,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # GROUND_TRUTH_SEGM_FILE = DATA_PATH_ROOT / "table_task_UR5e_ground_truth.json"
 GROUND_TRUTH_SEGM_FILE = Path(".") / "table_task_UR5e_ground_truth.json"
 # BAG_FILE = DATA_PATH_ROOT / "rosbag2_2025-09-08_19-46-18_2025-09-08-19-46-19.bag"
-BAGFILE_NUM = 0
+BAGFILE_NUM = 1
 
 
 pn.extension(design="material", sizing_mode="stretch_width")

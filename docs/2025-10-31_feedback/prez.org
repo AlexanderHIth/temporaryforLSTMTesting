@@ -93,10 +93,32 @@ Questions ?
 % End:
 
 * COMMENT Feedback
-** Easy solution \to force the higher level movement to be composed of 2 lower level movements
-** Small RNN
-** Hybrid HMM + RNN
-** KNN to find higher level movements
-** Map a new timeseries tuple to known timeseries classes with similarity measure
-*** Basically Brendan's paper
-*** Moving window to compare to previous segments
+** Ma
+*** Easy solution \to force the higher level movement to be composed of 2 lower level movements
+*** Small RNN
+*** Hybrid HMM + RNN
+*** KNN to find higher level movements
+*** Map a new timeseries tuple to known timeseries classes with similarity measure
+**** Basically Brendan's paper
+**** Moving window to compare to previous segments
+** Lab meeting
+*** Pretrained model for object detection
+*** Context by giving composition of primitive movements
+*** Partially observable H(S)MM
+*** Compare dataset to pretrain then finetune on own data
+*** KILL RL?
+Issue of how you define the reward signal
+
+** Reza
+*** TODO Train on 3 demonstrations, test on 1
+**** TODO Need to make the ground truth
+*** Signal that tells if any object is moving or not
+**** April tag on object to avoid needing a complex segmentation pipeline?
+*** Change point detection signal to help the HMM?
+** Thoughts
+*** Parallel processes:
+1. Output states from symbolic planner
+2. Detect states with HMM
+\to Mapping 1 to 1: Can compose new movements from symbolic planner
+\to No Mapping == potential new skill?
+*** Generate movements directly from learned HMM's generative process? (no DMP or ProMP) -> need to try, not sure it can work

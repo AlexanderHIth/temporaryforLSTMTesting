@@ -1,4 +1,4 @@
-% Created 2025-10-30 Thu 19:07
+% Created 2025-10-31 Fri 17:28
 % Intended LaTeX compiler: lualatex
 \documentclass[bigger]{beamer}
 \usepackage{amsmath}
@@ -32,8 +32,8 @@
 \usepackage{fontawesome}
 \usetheme{default}
 \author{Andrea Pierré}
-\date{October 31, 2025}
-\title{Timeseries segmentation feedback}
+\date{November 3, 2025}
+\title{Long horizon segmentation}
 \titlegraphic{\hfill\includegraphics[height=1.5cm]{medias/UML_logo.eps}}
 \setbeamercovered{transparent=10}
 \setbeamertemplate{section in toc}[sections numbered]
@@ -46,7 +46,7 @@ fg=headercolor
 }
 \hypersetup{
  pdfauthor={Andrea Pierré},
- pdftitle={Timeseries segmentation feedback},
+ pdftitle={Long horizon segmentation},
  pdfkeywords={},
  pdfsubject={},
  pdfcreator={Emacs 30.2 (Org mode 9.7.34)}, 
@@ -59,8 +59,8 @@ fg=headercolor
 \end{frame}
 
 \section{Context}
-\label{sec:org9c063a3}
-\begin{frame}[label={sec:orge31ce63}]{Robot learning of long horizon demonstrations}
+\label{sec:orgbcc9cb7}
+\begin{frame}[label={sec:orgd80f249}]{Robot learning of long horizon demonstrations}
 \begin{center}
 \movie{\includegraphics[height=0.4\textheight]{medias/thumb.png}}{medias/rosbag2_2025-09-08_19-46-18_2025-09-08-19-46-19.mkv}
 \end{center}
@@ -76,15 +76,15 @@ fg=headercolor
 \end{center}
 
 
-\begin{textblock}{10}(1.2,14.7)%
-\rightarrow~\alert{Small data} \ie{} few demonstrations
+\begin{textblock}{15}(1.2, 14.7)%
+\rightarrow~Extremely \alert{small} data \ie{} few demonstrations
 \end{textblock}
 \end{column}
 \end{columns}
 \end{frame}
 \section{Unsupervised learning -- State Detection}
-\label{sec:org7f04c82}
-\begin{frame}[label={sec:org76e8fde}]{H(S)MM -- Higher level movements \faicon{close}}
+\label{sec:org727e868}
+\begin{frame}[label={sec:org24d533d}]{H(S)MM -- Higher level movements \faicon{close}}
 \begin{columns}
 \begin{column}{0.5\columnwidth}
 \begin{center}
@@ -105,8 +105,8 @@ fg=headercolor
 \end{columns}
 \end{frame}
 \section{Unsupervised learning -- Change Point Detection}
-\label{sec:orgf16bcd7}
-\begin{frame}[label={sec:org7aa9c32}]{Greedy Gaussian Segmentation -- Higher level movements \faicon{close}}
+\label{sec:org636107c}
+\begin{frame}[label={sec:orgbe104e9}]{Greedy Gaussian Segmentation -- Higher level movements \faicon{close}}
 \begin{center}
 \includegraphics[width=.9\linewidth]{medias/GGS.png}
 \end{center}
@@ -114,14 +114,14 @@ fg=headercolor
 \includegraphics[height=0.45\textheight]{medias/ground-truth-segmentation-higher-level_old.png}
 \end{center}
 \end{frame}
-\begin{frame}[label={sec:orgefd51ad}]{ruptures -- Lower level movements}
+\begin{frame}[label={sec:org7c374d6}]{ruptures -- Lower level movements}
 \begin{center}
 \includegraphics[width=.9\linewidth]{medias/ruptures.png}
 \end{center}
 \end{frame}
 \section{Supervised learning}
-\label{sec:orge7f0465}
-\begin{frame}[label={sec:orgf529db4}]{Supervised HMM -- Lower level movements \faicon{check-circle-o}}
+\label{sec:org99c6a59}
+\begin{frame}[label={sec:org08f349d}]{Supervised HMM -- Lower level movements \faicon{check-circle-o}}
 \begin{center}
 \includegraphics[height=0.45\textheight]{medias/ground-truth-segmentation-lower-level.png}
 \end{center}
@@ -129,7 +129,7 @@ fg=headercolor
 \includegraphics[height=0.45\textheight]{medias/supervised-HMM-cont-lower-level.png}
 \end{center}
 \end{frame}
-\begin{frame}[label={sec:org7258fe8}]{Supervised HMM -- Higher level movements \faicon{close}}
+\begin{frame}[label={sec:org9092fd3}]{Supervised HMM -- Higher level movements \faicon{close}}
 \begin{center}
 \includegraphics[height=0.45\textheight]{medias/ground-truth-segmentation-higher-level.png}
 \end{center}
@@ -137,7 +137,7 @@ fg=headercolor
 \includegraphics[height=0.45\textheight]{medias/supervised-HMM-cont-higher-level.png}
 \end{center}
 \end{frame}
-\begin{frame}[label={sec:org1e5b520}]{XGBoost -- Higher level movements \faicon{close}}
+\begin{frame}[label={sec:org8b4cb86}]{XGBoost -- Higher level movements \faicon{close}}
 \begin{center}
 \begin{tabular}{lll}
 Split & F1 & Accuracy\\
@@ -151,14 +151,14 @@ Split & F1 & Accuracy\\
 \end{center}
 \end{frame}
 \section{Conclusion}
-\label{sec:org44116a7}
-\begin{frame}[label={sec:org631354c}]{Conclusion}
+\label{sec:org6b48423}
+\begin{frame}[label={sec:org1537e15}]{Conclusion}
 \begin{itemize}
 \item Can model \alert{lower} level movements with good performance
 \item Modeling \alert{higher} level movements remains a challenge
 \end{itemize}
 \end{frame}
-\begin{frame}[label={sec:org58dabbe}]{Questions}
+\begin{frame}[label={sec:org6adba1f}]{Questions}
 \begin{itemize}
 \item Any other method I may have missed that could help solve this problem?
 \begin{itemize}
@@ -170,7 +170,7 @@ Split & F1 & Accuracy\\
 \end{itemize}
 \end{itemize}
 \end{frame}
-\begin{frame}[label={sec:org476171e},standout]{~}
+\begin{frame}[label={sec:org6df378a},standout]{~}
 Questions ?
 \end{frame}
 \end{document}
