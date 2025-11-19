@@ -13,7 +13,7 @@ import numpy as np
 
 
 def extract_eef_data_from_rosbag(bagfile):
-    print("Extracting TF & gripper data from Bag file...")
+    print(f"Extracting TF & gripper data from Bag file: `{bagfile}`")
     tf = {"x": [], "y": [], "z": [], "timestamp": []}
     gripper = {"val": [], "timestamp": []}
 
