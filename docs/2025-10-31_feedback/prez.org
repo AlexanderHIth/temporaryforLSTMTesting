@@ -110,9 +110,9 @@ Questions ?
 Issue of how you define the reward signal
 
 ** Reza
-*** TODO Train on 3 demonstrations, test on 1
-**** TODO Need to make the ground truth
-*** Signal that tells if any object is moving or not
+*** DONE Train on 3 demonstrations, test on 1
+**** DONE Need to make the ground truth
+*** TODO Signal that tells if any object is moving or not
 **** April tag on object to avoid needing a complex segmentation pipeline?
 *** Change point detection signal to help the HMM?
 ** Thoughts
