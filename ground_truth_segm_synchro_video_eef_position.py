@@ -120,8 +120,12 @@ def get_line_plot(traj, epoch_req, gt_segm_dict=None, skill_choice=None):
     lineplot_grip = traj.hvplot(x="timestamp", y=["gripper"], label="gripper")
     # overlay.opts(opts.VLine(color="red", line_dash='dashed', line_width=6))
     overlay = lineplot_tf * lineplot_grip * vline
-    fill_min = np.min([traj.x.min(), traj.y.min(), traj.z.min()])
-    fill_max = np.max([traj.x.max(), traj.y.max(), traj.z.max()])
+
+    y_low = np.min([traj.x.min(), traj.y.min(), traj.z.min(), traj.gripper.min()])
+    y_high = np.max([traj.x.max(), traj.y.max(), traj.z.max(), traj.gripper.max()])
+    y_range = np.abs(y_high - y_low) / 2
+    y_top = y_high + 0.1 * y_range
+    y_bottom = y_low - 0.1 * y_range
 
     if skill_choice == "HigherLevel":
         for sect_key in gt_segm_dict[skill_choice]:
@@ -147,9 +151,9 @@ def get_line_plot(traj, epoch_req, gt_segm_dict=None, skill_choice=None):
             spread = hv.Spread(
                 (
                     xs,
-                    fill_max - fill_min,
-                    fill_min - 2,
-                    fill_max + 2,
+                    y_range,
+                    y_range - y_bottom,
+                    y_range + y_top,
                 ),
                 label=sect_key,
             ).opts(fill_alpha=0.15)
@@ -181,15 +185,15 @@ def get_line_plot(traj, epoch_req, gt_segm_dict=None, skill_choice=None):
                 spread = hv.Spread(
                     (
                         xs,
-                        fill_max - fill_min,
-                        fill_min - 2,
-                        fill_max + 2,
+                        y_range,
+                        y_range - y_bottom,
+                        y_range + y_top,
                     ),
                     label=sect_key,
                 ).opts(fill_alpha=0.15, color=palette[idx])
                 overlay = overlay * spread
 
-    return overlay.opts(ylim=(fill_min - 0.1, fill_max + 0.1))
+    return overlay.opts(ylim=(y_bottom, y_top))
 
 
 @pn.cache
