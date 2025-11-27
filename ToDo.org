@@ -1,0 +1,29 @@
+#+title: ToDo
+* Ground truth data
+** DONE Make ground truth data consistent
+** DONE Add /Grasping/ class
+** TODO Smoothen the timeseries with splines, then sample 200 data points
+* CRF
+** Plot test & validation accuracy
+** DONE Loop testing on all 4 demonstrations & aggregate 4 results
+** [?] Train on all 4 demos & test on CV splits?
+* HMM
+** DONE Check testing on unseen data with HMM
+** Plot test & validation accuracy
+** TODO Loop testing on all 4 demonstrations & aggregate 4 results
+*** TODO Convert to batched model
+* Higher level segmentation
+** KILL Get the pixel position of objects across time 
+** Convert to binary signals: moving/not moving
+** KILL Try Segment Anything or DINOv3, whatever works!
+** TODO Need AprilTags
+* Discovery of new skills
+** Make a fake skill that repeats in test data
+** HMM \to get the uncertainty of hidden states
+** CRF
+*** Implement Bayesian CRF version
+*** Get the uncertainty of ~y~ states
+* Code
+** Make a dataloader?
+* TODO Similarity metric to know the name of the class
+* TODO Make features for when the objects move
