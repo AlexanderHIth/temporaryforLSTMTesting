@@ -2,19 +2,28 @@
 * Ground truth data
 ** DONE Make ground truth data consistent
 ** DONE Add /Grasping/ class
-** TODO Smoothen the timeseries with splines, then sample 200 data points
+** Smoothen the timeseries with splines, then sample 200 data points
+** Add more features
+*** DONE Objects moving
+*** [?] Quaternions
+*** Velocity
+*** Curvature
+*** Torsion
 * CRF
 ** Plot test & validation accuracy
-** DONE Loop testing on all 4 demonstrations & aggregate 4 results
-** [?] Train on all 4 demos & test on CV splits?
+** DONE Train on 3 demonstrations, test on unseen one
+** Cross-validation \to train on splits and average metrics results
+[[file:assets/sphx_glr_plot_cv_indices_013.png]]
 * HMM
 ** DONE Check testing on unseen data with HMM
 ** Plot test & validation accuracy
-** TODO Loop testing on all 4 demonstrations & aggregate 4 results
-*** TODO Convert to batched model
+** DONE Train on 3 demonstrations, test on unseen one
+** DONE Convert to batched model
+** Cross-validation \to train on splits and average metrics results
+[[file:assets/sphx_glr_plot_cv_indices_013.png]]
 * Higher level segmentation
 ** KILL Get the pixel position of objects across time 
-** Convert to binary signals: moving/not moving
+** DONE Convert to binary signals: moving/not moving
 ** KILL Try Segment Anything or DINOv3, whatever works!
 ** TODO Need AprilTags
 * Discovery of new skills
@@ -25,5 +34,7 @@
 *** Get the uncertainty of ~y~ states
 * Code
 ** Make a dataloader?
-* TODO Similarity metric to know the name of the class
-* TODO Make features for when the objects move
+* Project
+** DONE Make features for when the objects move
+** Similarity metric to know the name of the class
+** Discover new skill from Bayesian uncertainty
