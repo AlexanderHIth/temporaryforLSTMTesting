@@ -12,7 +12,7 @@ from PIL import Image
 import numpy as np
 
 
-def extract_eef_data_from_rosbag(bagfile):
+def extract_eef_data_from_rosbag(bagfile, threshold=0.6):
     print(f"Extracting TF & gripper data from Bag file: `{bagfile}`")
     tf = {"x": [], "y": [], "z": [], "timestamp": []}
     gripper = {"val": [], "timestamp": []}
@@ -51,11 +51,16 @@ def extract_eef_data_from_rosbag(bagfile):
     tf_df = pd.DataFrame(tf)
     gripper_df = pd.DataFrame(gripper)
     gripper_df["val"] = gripper_df["val"].apply(lambda elem: elem / 100)
-    #
+
     # Merge both DataFrames into one
     traj = pd.merge_asof(tf_df, gripper_df, on="timestamp")
     traj.dropna(inplace=True, ignore_index=True)
     traj.rename(columns={"val": "gripper"}, inplace=True)
+
+    # # Simplify gripper data
+    # traj.loc[traj.gripper < threshold, "gripper"] = 0
+    # traj.loc[traj.gripper >= threshold, "gripper"] = 1
+
     print("Extracting TF & gripper data from Bag file: done ✓")
     return traj
 
@@ -83,7 +88,7 @@ def get_bagfiles_from_json(ground_truth_segm_file):
     for item in json_dict.get("groundtruth"):
         bagpath = root_path / item.get("filename")
         bagfiles.append(bagpath)
-    return bagfiles
+    return sorted(bagfiles)
 
 
 def get_ground_truth_segmentation(ground_truth_segm_file, bagfile):
