@@ -2,13 +2,20 @@
 * Ground truth data
 ** DONE Make ground truth data consistent
 ** DONE Add /Grasping/ class
-** Smoothen the timeseries with splines, then sample 200 data points
+** [?] Smoothen the timeseries with splines, then sample 200 data points
 ** Add more features
 *** DONE Objects moving
 *** [?] Quaternions
 *** Velocity
 *** Curvature
 *** Torsion
+** DONE Try making the data simpler
+*** [X] Remove fork & spoon
+Okay-ish \to 70%
+*** KILL Simplify gripper multi stairs into a single 0/1 binary signal
+*** [X] Try to simplify the ground truth to only 2 segments
+Works!
+*** Break the signal into 5 repetitions and learn only the 4 primitives x 5 repetitions x 3 demonstrations (i.e. learn on 50 points instead of 250 and loop on the length of the complete signal)
 * CRF
 ** Plot test & validation accuracy
 ** DONE Train on 3 demonstrations, test on unseen one
@@ -25,16 +32,18 @@
 ** KILL Get the pixel position of objects across time 
 ** DONE Convert to binary signals: moving/not moving
 ** KILL Try Segment Anything or DINOv3, whatever works!
-** TODO Need AprilTags
-* Discovery of new skills
-** Make a fake skill that repeats in test data
-** HMM \to get the uncertainty of hidden states
-** CRF
-*** Implement Bayesian CRF version
-*** Get the uncertainty of ~y~ states
+** Need AprilTags
 * Code
 ** Make a dataloader?
+** TODO Plot ground truth on same plot as prediction:
+*** as vertical dashed lines on same plots
+*** TODO add another axis just for the GT classes
 * Project
 ** DONE Make features for when the objects move
-** Similarity metric to know the name of the class
-** Discover new skill from Bayesian uncertainty
+** TODO Similarity metric to know the name of the class
+** TODO Discovery of new skills
+*** Make a fake skill that repeats in test data
+*** HMM \to get the uncertainty of hidden states
+*** CRF
+**** Implement Bayesian CRF version
+**** Get the uncertainty of ~y~ states
