@@ -2,11 +2,12 @@
 * Ground truth data
 ** DONE Make ground truth data consistent
 ** DONE Add /Grasping/ class
-** [?] Smoothen the timeseries with splines, then sample 200 data points
+** TODO Smoothen the timeseries with splines, then sample 200 data points
 ** Add more features
 *** DONE Objects moving
 *** [?] Quaternions
-*** Velocity
+*** IDEA Velocity
+Suggested by Brendan
 *** Curvature
 *** Torsion
 ** DONE Try making the data simpler
@@ -28,22 +29,35 @@ Works!
 ** DONE Convert to batched model
 ** Cross-validation \to train on splits and average metrics results
 [[file:assets/sphx_glr_plot_cv_indices_013.png]]
-* Higher level segmentation
+* R-HMM
+** Update code and fix bugs
+* KILL Higher level segmentation
 ** KILL Get the pixel position of objects across time 
 ** DONE Convert to binary signals: moving/not moving
 ** KILL Try Segment Anything or DINOv3, whatever works!
 ** Need AprilTags
 * Code
-** Make a dataloader?
+** KILL Make a dataloader?
 ** TODO Plot ground truth on same plot as prediction:
 *** as vertical dashed lines on same plots
 *** TODO add another axis just for the GT classes
+** TODO Better metric than accuracy/F1?
+*** Normalized Mutual Information
+*** Adjusted Rand Index
+** TODO ~MinMaxScaler~ used twice??
+** Prepare graph for publication
+[[file:assets/assets.amazon.science.webp]]
+*** Transparent background
+*** LaTeX font
 * Project
 ** DONE Make features for when the objects move
 ** TODO Similarity metric to know the name of the class
 ** TODO Discovery of new skills
 *** Make a fake skill that repeats in test data
+**** Try in the pickNplace setting
 *** HMM \to get the uncertainty of hidden states
 *** CRF
 **** Implement Bayesian CRF version
 **** Get the uncertainty of ~y~ states
+** Test on bigger datasets
+*** Compare dataset from Nerve
